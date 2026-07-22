@@ -1,0 +1,107 @@
+// LunchLedger AI — data model.
+// All money is stored as integer minor units (paisa/cents); see @lunchledger/shared/money.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?  @unique
+  createdAt DateTime @default(now())
+
+  memberships     Membership[]
+  paidExpenses    Expense[]            @relation("ExpensePayer")
+  participations  ExpenseParticipant[]
+  settlementsFrom Settlement[]         @relation("SettlementFrom")
+  settlementsTo   Settlement[]         @relation("SettlementTo")
+
+  @@index([name])
+}
+
+model Group {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  memberships Membership[]
+  expenses    Expense[]
+  settlements Settlement[]
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  groupId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@index([groupId])
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  groupId     String
+  payerId     String
+  amountMinor Int
+  description String?
+  occurredAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  group        Group                @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  payer        User                 @relation("ExpensePayer", fields: [payerId], references: [id])
+  participants ExpenseParticipant[]
+  guests       GuestParticipant[]
+
+  @@index([groupId, occurredAt])
+}
+
+model ExpenseParticipant {
+  id         String @id @default(cuid())
+  expenseId  String
+  userId     String
+  shareMinor Int
+
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([expenseId, userId])
+  @@index([userId])
+}
+
+// A guest affects exactly one expense (owes their share to the payer) and is not a group member.
+model GuestParticipant {
+  id         String @id @default(cuid())
+  expenseId  String
+  name       String
+  shareMinor Int
+
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+
+  @@index([expenseId])
+}
+
+model Settlement {
+  id          String   @id @default(cuid())
+  groupId     String
+  fromUserId  String
+  toUserId    String
+  amountMinor Int
+  occurredAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  group    Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  fromUser User  @relation("SettlementFrom", fields: [fromUserId], references: [id])
+  toUser   User  @relation("SettlementTo", fields: [toUserId], references: [id])
+
+  @@index([groupId, occurredAt])
+}

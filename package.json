@@ -1,0 +1,27 @@
+{
+  "name": "lunchledger-ai",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Voice-first, AI-powered expense management for friend groups",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "dev:api": "pnpm --filter @lunchledger/api dev",
+    "chat": "pnpm --filter @lunchledger/api chat",
+    "db:generate": "pnpm --filter @lunchledger/db generate",
+    "db:migrate": "pnpm --filter @lunchledger/db migrate",
+    "db:seed": "pnpm --filter @lunchledger/db seed",
+    "db:up": "docker compose up -d db",
+    "db:down": "docker compose down",
+    "smoke": "pnpm --filter @lunchledger/api smoke"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "packageManager": "pnpm@11.9.0"
+}

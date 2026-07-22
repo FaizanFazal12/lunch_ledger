@@ -1,0 +1,683 @@
+# LunchLedger AI
+
+## Overview
+
+LunchLedger AI is a voice-first, AI-powered expense management application for friend groups.
+
+Unlike Splitwise, users do not manually create expenses through forms.
+
+Instead, they simply speak or type naturally:
+
+> "Ali and Usman only went today. Ali paid 1200."
+
+The AI understands:
+
+- Intent
+- Participants
+- Payer
+- Amount
+- Missing users
+- Guest users
+- Group context
+
+It then updates the database automatically.
+
+The project should showcase modern AI engineering using LangGraph, tool calling, structured outputs, and deterministic business logic.
+
+---
+
+# Goal
+
+Build a production-quality SaaS application using:
+
+- TypeScript
+- Node.js
+- Fastify
+- LangGraph JS
+- LangChain JS
+- PostgreSQL
+- Prisma
+- Next.js
+- Tailwind
+- shadcn/ui
+
+This is NOT a chatbot.
+
+This is an AI Agent that performs actions using tools.
+
+---
+
+# Product Vision
+
+Imagine five friends who eat lunch together every day.
+
+Every day:
+
+Someone pays.
+
+Participants may change.
+
+Someone new may join.
+
+Someone may not come.
+
+Instead of opening an app and filling forms, one person simply says:
+
+"Ali paid 2500 today.
+Usman wasn't with us."
+
+The AI records everything correctly.
+
+---
+
+# Core Features
+
+## Groups
+
+Users can create multiple groups.
+
+Examples:
+
+- Office Friends
+- University Friends
+- Cricket Team
+- Family
+
+Each group has different members.
+
+---
+
+## Members
+
+Groups contain members.
+
+Members can be:
+
+Permanent members
+
+Example
+
+Ali
+Ahmed
+Hamza
+Usman
+Faizan
+
+Temporary guests
+
+Example
+
+Bilal joins only today.
+
+Guests should only affect one expense.
+
+---
+
+## Expense Recording
+
+Users should be able to say things naturally.
+
+Examples
+
+Ali paid 2400.
+
+Only Ali and Ahmed went today.
+
+Everyone except Hamza.
+
+Me, Ali and Bilal had lunch.
+
+Ahmed paid for everyone.
+
+Ali paid 1800 for himself and me.
+
+I paid 900 today.
+
+The AI should correctly identify:
+
+payer
+
+participants
+
+amount
+
+group
+
+date
+
+---
+
+## Balance Tracking
+
+The system should maintain running balances.
+
+Example
+
+Ali paid 2500
+
+Participants:
+
+Ali
+Ahmed
+Hamza
+Faizan
+Usman
+
+Each share:
+
+500
+
+Balances
+
+Ali +2000
+
+Ahmed -500
+
+Hamza -500
+
+Faizan -500
+
+Usman -500
+
+---
+
+## Settlement
+
+Users can settle debts.
+
+Examples
+
+Ahmed paid Ali 500.
+
+I gave Hamza 700.
+
+After settlement, balances update automatically.
+
+---
+
+## Expense History
+
+Examples
+
+Show today's expenses.
+
+Show last week's lunches.
+
+Show all expenses this month.
+
+---
+
+## Recommendation
+
+The AI can answer:
+
+Who should pay tomorrow?
+
+Who owes me money?
+
+How much do I owe Ali?
+
+Who spent the most this month?
+
+---
+
+# Voice First
+
+The application should eventually support voice.
+
+Pipeline
+
+Voice
+
+↓
+
+Speech-to-text
+
+↓
+
+LangGraph
+
+↓
+
+Database Tools
+
+↓
+
+Response
+
+↓
+
+Text-to-speech
+
+For MVP, text input is sufficient.
+
+Architecture should support voice later.
+
+---
+
+# AI Responsibilities
+
+AI should ONLY
+
+Understand language
+
+Extract entities
+
+Choose tools
+
+Ask clarification questions
+
+Generate responses
+
+AI should NEVER
+
+Calculate balances
+
+Update balances manually
+
+Split expenses
+
+Perform business calculations
+
+Business logic must remain deterministic.
+
+---
+
+# Architecture
+
+AI Layer
+
+↓
+
+Application Services
+
+↓
+
+Database
+
+AI understands.
+
+Services calculate.
+
+Database stores.
+
+---
+
+# LangGraph
+
+Create a graph with these nodes.
+
+User Input
+
+↓
+
+Intent Detection
+
+↓
+
+Entity Extraction
+
+↓
+
+Participant Resolver
+
+↓
+
+Tool Executor
+
+↓
+
+Response Generator
+
+Each node should be independent.
+
+---
+
+# Supported Intents
+
+ADD_EXPENSE
+
+SHOW_BALANCE
+
+SHOW_HISTORY
+
+SETTLE_PAYMENT
+
+WHO_SHOULD_PAY
+
+ADD_MEMBER
+
+CREATE_GROUP
+
+REMOVE_MEMBER
+
+---
+
+# Entity Extraction
+
+Extract
+
+payer
+
+participants
+
+amount
+
+group
+
+date
+
+description
+
+Example
+
+Input
+
+Ali paid 2400.
+
+Only Ali and Ahmed went.
+
+Output
+
+{
+  "intent": "ADD_EXPENSE",
+  "payer": "Ali",
+  "participants": [
+    "Ali",
+    "Ahmed"
+  ],
+  "amount": 2400
+}
+
+---
+
+# Participant Resolver
+
+Should understand
+
+Everyone
+
+Everyone except Ali
+
+Only Ali and Ahmed
+
+Me
+
+Myself
+
+All of us
+
+Bilal also joined
+
+Temporary guest
+
+Missing members
+
+Unknown names
+
+If a name is unknown:
+
+Ask
+
+"Bilal is not a member.
+Would you like to add him temporarily or permanently?"
+
+---
+
+# Tool Layer
+
+Implement LangChain tools.
+
+Examples
+
+createExpense()
+
+calculateBalances()
+
+getBalances()
+
+createSettlement()
+
+getExpenseHistory()
+
+createGroup()
+
+addMember()
+
+removeMember()
+
+getMembers()
+
+These tools call application services.
+
+Never access Prisma directly inside AI nodes.
+
+---
+
+# Business Logic
+
+Expense calculation must NOT use AI.
+
+Example
+
+Expense
+
+2500
+
+Participants
+
+5
+
+Share
+
+500
+
+Payer receives
+
+2000
+
+Others owe
+
+500
+
+Everything must be deterministic.
+
+---
+
+# Database
+
+Use Prisma.
+
+Entities
+
+User
+
+Group
+
+Membership
+
+Expense
+
+ExpenseParticipant
+
+Settlement
+
+GuestParticipant (optional)
+
+---
+
+# API
+
+POST /ai/message
+
+Body
+
+{
+    "message":"Ali paid 2500. Everyone except Hamza."
+}
+
+Response
+
+{
+    "success":true,
+    "reply":"Expense added successfully.",
+    "data":{}
+}
+
+---
+
+# Frontend
+
+Next.js
+
+Simple dashboard
+
+Left
+
+Conversation
+
+Right
+
+Current balances
+
+Bottom
+
+Expense history
+
+Later
+
+Voice button
+
+---
+
+# Project Structure
+
+apps/
+
+    api/
+
+    web/
+
+packages/
+
+    ai/
+
+        graph/
+
+        nodes/
+
+        prompts/
+
+        state/
+
+        tools/
+
+    db/
+
+    shared/
+
+---
+
+# Coding Standards
+
+Use strict TypeScript.
+
+Never use any.
+
+Use Zod validation.
+
+Use Prisma.
+
+Use Repository pattern.
+
+Use Service layer.
+
+Use Dependency Injection where appropriate.
+
+Keep AI separate from business logic.
+
+Write reusable functions.
+
+Keep nodes small.
+
+One responsibility per node.
+
+---
+
+# Future Features
+
+OpenAI Realtime API
+
+Voice conversations
+
+WhatsApp Bot
+
+Telegram Bot
+
+Receipt OCR
+
+Monthly analytics
+
+Charts
+
+Notifications
+
+Recurring lunches
+
+Expense categories
+
+Export CSV
+
+Docker deployment
+
+Authentication
+
+Multiple organizations
+
+---
+
+# Non Functional Requirements
+
+Clean Architecture
+
+SOLID Principles
+
+Repository Pattern
+
+Service Layer
+
+Type-safe APIs
+
+Scalable project structure
+
+Production-ready code
+
+Error handling
+
+Logging
+
+Environment variables
+
+Unit tests
+
+Integration tests
+
+---
+
+# Primary Objective
+
+This project is intended to demonstrate production-level AI engineering using LangGraph.
+
+The focus should be on:
+
+- Multi-agent orchestration
+- Tool calling
+- Structured outputs
+- Natural language understanding
+- Clean architecture
+- Scalable TypeScript backend
+- Real-world business logic
+
+Avoid building a generic chatbot.
+
+Instead, build an AI employee that understands user requests and performs real application actions.

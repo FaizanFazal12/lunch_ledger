@@ -1,0 +1,27 @@
+{
+  "name": "@lunchledger/ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@langchain/core": "^0.3.40",
+    "@langchain/google-genai": "^0.2.0",
+    "@langchain/langgraph": "^0.2.44",
+    "@langchain/openai": "^0.3.17",
+    "@lunchledger/core": "workspace:*",
+    "@lunchledger/shared": "workspace:*",
+    "zod": "^3.24.1"
+  }
+}

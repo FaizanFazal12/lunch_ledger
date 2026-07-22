@@ -1,0 +1,24 @@
+{
+  "name": "@lunchledger/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "build": "tsc -b",
+    "typecheck": "tsc --noEmit",
+    "smoke": "tsx src/smoke.ts",
+    "chat": "tsx src/chat.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.1",
+    "@lunchledger/ai": "workspace:*",
+    "@lunchledger/core": "workspace:*",
+    "@lunchledger/db": "workspace:*",
+    "@lunchledger/shared": "workspace:*",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.0",
+    "zod": "^3.24.1"
+  }
+}
