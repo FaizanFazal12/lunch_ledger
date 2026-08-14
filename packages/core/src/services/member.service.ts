@@ -1,5 +1,6 @@
 import type { Extraction } from "@lunchledger/shared";
 import type { GroupMember, GroupRepository, UserRepository } from "@lunchledger/db";
+import { DomainError } from "../errors.js";
 
 const SELF_ALIASES = new Set(["me", "myself", "i", "self"]);
 
@@ -29,7 +30,7 @@ export function resolveName(
       ? { userId: currentUserId, unknownName: null }
       : { userId: null, unknownName: null };
   }
-  const match = members.find((m) => m.name.trim().toLowerCase() === name);
+  const match = members.find((m) => sameName(m.name, name));
   return match
     ? { userId: match.userId, unknownName: null }
     : { userId: null, unknownName: rawName.trim() };
@@ -86,6 +87,11 @@ function dedupe<T>(items: T[]): T[] {
   return [...new Set(items)];
 }
 
+/** People are addressed by name here, so comparison ignores case and padding. */
+function sameName(a: string, b: string): boolean {
+  return a.trim().toLowerCase() === b.trim().toLowerCase();
+}
+
 /**
  * Membership mutations (add/remove permanent members). Creating brand-new users
  * is allowed so "add Bilal permanently" works end to end.
@@ -96,8 +102,28 @@ export class MemberService {
     private readonly users: UserRepository,
   ) {}
 
+  /**
+   * Add someone to a group as a permanent member.
+   *
+   * The same person is often in several groups ("Office Friends" and "Cricket Team"),
+   * so an existing user with that name is reused rather than duplicated; a brand-new
+   * user is created only when nobody by that name exists yet. Adding a name that is
+   * already in the group is a no-op the caller should hear about, not a silent dupe.
+   */
   async addPermanentMember(groupId: string, name: string): Promise<{ userId: string }> {
-    const user = await this.users.create(name);
+    const trimmed = name.trim();
+    if (trimmed.length === 0) {
+      throw new DomainError("VALIDATION", "Who should I add?");
+    }
+
+    const members = await this.groups.listMembers(groupId);
+    const alreadyIn = members.find((m) => sameName(m.name, trimmed));
+    if (alreadyIn !== undefined) {
+      throw new DomainError("VALIDATION", `${alreadyIn.name} is already in this group.`);
+    }
+
+    const existing = await this.users.findByName(trimmed);
+    const user = existing ?? (await this.users.create(trimmed));
     await this.groups.addMember(groupId, user.id);
     return { userId: user.id };
   }

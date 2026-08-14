@@ -22,6 +22,9 @@ export function makeRespondNode() {
   };
 }
 
+/** Most expenses we list in a single chat reply before summarising the rest. */
+const HISTORY_LIMIT = 10;
+
 function render(data: ExecResult): string {
   switch (data.kind) {
     case "expense_added": {
@@ -46,12 +49,23 @@ function render(data: ExecResult): string {
     case "settled":
       return `Recorded: ${data.fromName} paid ${data.toName} ${formatMinor(data.amountMinor)}.`;
     case "history": {
-      if (data.expenses.length === 0) return "No expenses recorded yet.";
-      const lines = data.expenses.slice(0, 10).map((e) => {
+      const period = data.rangeLabel !== null ? ` for ${data.rangeLabel}` : "";
+      if (data.expenses.length === 0) {
+        return data.rangeLabel !== null
+          ? `No expenses recorded${period}.`
+          : "No expenses recorded yet.";
+      }
+      const shown = data.expenses.slice(0, HISTORY_LIMIT);
+      const lines = shown.map((e) => {
         const date = e.occurredAt.slice(0, 10);
         return `  • ${date} — ${e.payerName} paid ${formatMinor(e.amountMinor)} (${e.participants.length} people)`;
       });
-      return `Recent expenses:\n${lines.join("\n")}`;
+      const header = data.rangeLabel !== null ? `Expenses${period}` : "Recent expenses";
+      const more =
+        data.expenses.length > shown.length
+          ? `\n  …and ${data.expenses.length - shown.length} more.`
+          : "";
+      return `${header}:\n${lines.join("\n")}${more}`;
     }
     case "group_created":
       return `Created the group "${data.name}".`;

@@ -1,6 +1,7 @@
 import type { CoreServices } from "@lunchledger/core";
 import type {
   CreateExpenseResult,
+  GroupMember,
   HistoryQuery,
 } from "@lunchledger/core";
 import type { ExpenseView, GroupBalances } from "@lunchledger/shared";
@@ -14,6 +15,9 @@ import type { ExpenseView, GroupBalances } from "@lunchledger/shared";
  * function-calling is a straightforward future enhancement.
  */
 export interface Tools {
+  /** The group's permanent members. Nodes use this instead of reaching for services. */
+  getMembers(input: { groupId: string }): Promise<GroupMember[]>;
+
   createExpense(input: {
     groupId: string;
     payerId: string;
@@ -45,6 +49,8 @@ export interface Tools {
 
 export function createTools(services: CoreServices): Tools {
   return {
+    getMembers: (input) => services.groups.listMembers(input.groupId),
+
     createExpense: (input) =>
       services.expenseService.createExpense({
         groupId: input.groupId,

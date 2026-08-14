@@ -7,7 +7,8 @@ export type { GroupMember } from "@lunchledger/db";
 export { DomainError, isDomainError } from "./errors.js";
 export type { DomainErrorCode } from "./errors.js";
 
-export { resolveDate } from "./date.js";
+export { resolveDate, resolveDateRange } from "./date.js";
+export type { DateRange } from "./date.js";
 
 export { ExpenseService } from "./services/expense.service.js";
 export type {

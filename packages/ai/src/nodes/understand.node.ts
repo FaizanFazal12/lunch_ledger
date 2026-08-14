@@ -8,7 +8,7 @@ import type { AgentStateType, AgentStateUpdate } from "../state/graphState.js";
  */
 export function makeUnderstandNode(deps: AgentDeps) {
   return async function understand(state: AgentStateType): Promise<AgentStateUpdate> {
-    const members = await deps.services.groups.listMembers(state.groupId);
+    const members = await deps.tools.getMembers({ groupId: state.groupId });
     const extraction = await deps.extractor.extract(state.message, {
       members: members.map((m) => m.name),
       currentUserName: state.currentUserName,

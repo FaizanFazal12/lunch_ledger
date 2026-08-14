@@ -37,6 +37,9 @@ export function buildExtractionSystemPrompt(ctx: PromptContext): string {
     "Capture names exactly as written. Unknown names (not in the member list) are still captured verbatim; downstream code decides what to do with them.",
     "For ADD_EXPENSE also capture `payer` (a name or \"me\") and `amount` (a plain number, no currency symbol).",
     "For SETTLE_PAYMENT capture `settleFrom` (who paid) and `settleTo` (who received).",
-    "Capture `dateText` verbatim if a date is mentioned (e.g. \"today\", \"yesterday\").",
+    "Capture `dateText` verbatim if a date or period is mentioned. For ADD_EXPENSE it is when",
+    "the expense happened (\"today\", \"yesterday\", \"3 days ago\", \"2026-07-20\"); for SHOW_HISTORY",
+    "it is the period to list (\"today\", \"this week\", \"last week\", \"this month\", \"last month\",",
+    "\"last 7 days\"). Never convert it to a real date yourself — deterministic code does that.",
   ].join("\n");
 }

@@ -13,7 +13,12 @@ export type ExecResult =
     }
   | { kind: "balances"; balances: GroupBalances }
   | { kind: "settled"; fromName: string; toName: string; amountMinor: number }
-  | { kind: "history"; expenses: ExpenseView[] }
+  | {
+      kind: "history";
+      expenses: ExpenseView[];
+      /** The period the user asked for ("last week"), or null if unfiltered. */
+      rangeLabel: string | null;
+    }
   | { kind: "group_created"; name: string }
   | { kind: "member_added"; name: string }
   | { kind: "member_removed"; name: string }

@@ -1,4 +1,9 @@
-import { resolveDate, resolveName, resolveParticipants } from "@lunchledger/core";
+import {
+  resolveDate,
+  resolveDateRange,
+  resolveName,
+  resolveParticipants,
+} from "@lunchledger/core";
 import type { GroupMember } from "@lunchledger/core";
 import type { Extraction } from "@lunchledger/shared";
 import type { AgentDeps } from "./deps.js";
@@ -16,8 +21,11 @@ export function makeResolveNode(deps: AgentDeps) {
       return { clarification: "Sorry, I didn't catch that. Could you rephrase?" };
     }
 
-    const members = await deps.services.groups.listMembers(state.groupId);
+    const members = await deps.tools.getMembers({ groupId: state.groupId });
+    // The same `dateText` reads two ways: as a point in time for a new expense,
+    // and as a window for a history query. Both resolutions are deterministic.
     const occurredAt = resolveDate(extraction.dateText, state.now);
+    const dateRange = resolveDateRange(extraction.dateText, state.now);
 
     const empty: ResolvedInput = {
       payerId: null,
@@ -26,6 +34,7 @@ export function makeResolveNode(deps: AgentDeps) {
       settleFromId: null,
       settleToId: null,
       occurredAt,
+      dateRange,
       unknownNames: [],
     };
 

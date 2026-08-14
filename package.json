@@ -9,6 +9,7 @@
   "scripts": {
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
     "dev:api": "pnpm --filter @lunchledger/api dev",
     "chat": "pnpm --filter @lunchledger/api chat",
     "db:generate": "pnpm --filter @lunchledger/db generate",

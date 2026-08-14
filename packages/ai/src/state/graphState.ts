@@ -1,4 +1,5 @@
 import { Annotation } from "@langchain/langgraph";
+import type { DateRange } from "@lunchledger/core";
 import type { Extraction, Intent } from "@lunchledger/shared";
 
 /** Deterministic resolution output consumed by the executor node. */
@@ -9,6 +10,8 @@ export interface ResolvedInput {
   settleFromId: string | null;
   settleToId: string | null;
   occurredAt: Date;
+  /** Window for history queries, or null when the message named no period. */
+  dateRange: DateRange | null;
   /** Names the resolver could not map to a member — triggers a clarification. */
   unknownNames: string[];
 }

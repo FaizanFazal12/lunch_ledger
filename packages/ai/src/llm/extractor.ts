@@ -87,12 +87,7 @@ function parseHeuristically(message: string, ctx: ExtractContext): Extraction {
   const amountMatch = /(\d+(?:\.\d+)?)/.exec(lower);
   const amount = amountMatch ? Number.parseFloat(amountMatch[1] as string) : null;
 
-  const dateText = /\byesterday\b/.test(lower)
-    ? "yesterday"
-    : /\btoday\b/.test(lower)
-      ? "today"
-      : null;
-  out.dateText = dateText;
+  out.dateText = detectDateText(lower);
 
   // Names mentioned (members + self references), in the order they appear.
   const mentioned = findMentionedNames(text, ctx.members);
@@ -128,6 +123,36 @@ function parseHeuristically(message: string, ctx: ExtractContext): Extraction {
   }
 
   return ExtractionSchema.parse(out);
+}
+
+/**
+ * Canonical period phrases, longest/most specific first so "last week" wins over
+ * "week". Downstream `resolveDate` / `resolveDateRange` turn these into real dates.
+ */
+const DATE_PHRASES = [
+  "last week",
+  "this week",
+  "last month",
+  "this month",
+  "this year",
+  "yesterday",
+  "today",
+] as const;
+
+function detectDateText(lower: string): string | null {
+  for (const phrase of DATE_PHRASES) {
+    if (lower.includes(phrase)) return phrase;
+  }
+  const lastDays = /\b(?:last|past)\s+(\d+)\s+days?\b/.exec(lower);
+  if (lastDays?.[1] !== undefined) return `last ${lastDays[1]} days`;
+
+  const daysAgo = /\b(\d+)\s+days?\s+ago\b/.exec(lower);
+  if (daysAgo?.[1] !== undefined) return `${daysAgo[1]} days ago`;
+
+  const iso = /\b(\d{4}-\d{2}-\d{2})\b/.exec(lower);
+  if (iso?.[1] !== undefined) return iso[1];
+
+  return null;
 }
 
 function detectIntent(

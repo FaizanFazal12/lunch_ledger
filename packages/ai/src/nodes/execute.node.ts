@@ -1,5 +1,6 @@
 import { DomainError, isDomainError } from "@lunchledger/core";
-import type { GroupMember } from "@lunchledger/core";
+import type { GroupMember, HistoryQuery } from "@lunchledger/core";
+import { toMinorUnits } from "@lunchledger/shared";
 import type { AgentDeps } from "./deps.js";
 import type { AgentStateType, AgentStateUpdate, ResolvedInput } from "../state/graphState.js";
 import type { ExecResult } from "./results.js";
@@ -17,7 +18,7 @@ export function makeExecuteNode(deps: AgentDeps) {
     }
 
     try {
-      const members = await deps.services.groups.listMembers(state.groupId);
+      const members = await deps.tools.getMembers({ groupId: state.groupId });
       const nameOf = makeNameLookup(members);
       const data = await dispatch(deps, state, extraction, resolved, nameOf);
       return { data };
@@ -78,8 +79,15 @@ async function dispatch(
     }
 
     case "SHOW_HISTORY": {
-      const expenses = await deps.tools.getHistory({ groupId: state.groupId });
-      return { kind: "history", expenses };
+      const query: HistoryQuery = { groupId: state.groupId };
+      if (resolved.dateRange !== null) {
+        query.from = resolved.dateRange.from;
+        query.to = resolved.dateRange.to;
+      }
+      const expenses = await deps.tools.getHistory(query);
+      // Only claim a period in the reply when we actually filtered by one.
+      const rangeLabel = resolved.dateRange !== null ? extraction.dateText : null;
+      return { kind: "history", expenses, rangeLabel };
     }
 
     case "SETTLE_PAYMENT": {
@@ -97,7 +105,7 @@ async function dispatch(
         kind: "settled",
         fromName: nameOf(resolved.settleFromId),
         toName: nameOf(resolved.settleToId),
-        amountMinor: Math.round(extraction.amount * 100),
+        amountMinor: toMinorUnits(extraction.amount),
       };
     }
 

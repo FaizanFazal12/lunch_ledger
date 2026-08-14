@@ -36,7 +36,6 @@ export function createAgent(services: CoreServices, env: NodeJS.ProcessEnv): Age
   const deps: AgentDeps = {
     extractor,
     tools: createTools(services),
-    services,
   };
   const graph = buildAgentGraph(deps);
 

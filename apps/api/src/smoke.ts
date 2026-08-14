@@ -18,6 +18,8 @@ import { formatMinor } from "@lunchledger/shared";
 const FIXTURE_GROUP = "__SMOKE_TEST__";
 const FIXTURE_EMAIL_DOMAIN = "smoke.local";
 const MEMBERS = ["Ali", "Ahmed", "Hamza", "Usman", "Faizan"] as const;
+/** A name no real group would use, so cleaning it up by name is safe. */
+const NEWCOMER = "Smoketester";
 
 /** Remove any leftover fixture data from a previous run. */
 async function cleanupFixture(): Promise<void> {
@@ -26,6 +28,8 @@ async function cleanupFixture(): Promise<void> {
   await prisma.user.deleteMany({
     where: { email: { endsWith: `@${FIXTURE_EMAIL_DOMAIN}` } },
   });
+  // Members added through the agent have no fixture email, so clear them by name.
+  await prisma.user.deleteMany({ where: { name: NEWCOMER } });
 }
 
 async function createFixture(): Promise<{ groupId: string; faizanId: string }> {
@@ -95,6 +99,40 @@ async function main(): Promise<void> {
     const clarifyReply = await say("Bilal paid 800 for me and Bilal.");
     assert.match(clarifyReply, /Bilal is not a member/i, "Unknown name should trigger clarification");
     console.log("✓ Unknown participant triggers a clarification.");
+
+    // --- SHOW_HISTORY: the requested period actually filters the query ---
+    const todayHistory = await say("Show today's expenses.");
+    assert.match(todayHistory, /Expenses for today/i, "History should scope to the asked-for period");
+    assert.match(todayHistory, /Ali paid/i, "Today's expenses should include Ali's");
+
+    const lastMonthHistory = await say("Show last month's expenses.");
+    assert.match(
+      lastMonthHistory,
+      /No expenses recorded for last month/i,
+      "A period with no expenses should say so, not list today's",
+    );
+    console.log("✓ History respects the requested date range.");
+
+    // --- ADD_MEMBER: a person is created once, then reused rather than duplicated ---
+    await say(`Add ${NEWCOMER} permanently.`);
+    assert.equal(
+      await prisma.user.count({ where: { name: NEWCOMER } }),
+      1,
+      "Adding a new name should create exactly one user",
+    );
+
+    const dupeReply = await say(`Add ${NEWCOMER} permanently.`);
+    assert.match(dupeReply, /already in this group/i, "Re-adding a member should say they are already in");
+
+    // Leaving and rejoining must reuse the same person, not mint a second one.
+    await say(`Remove ${NEWCOMER} from the group.`);
+    await say(`Add ${NEWCOMER} permanently.`);
+    assert.equal(
+      await prisma.user.count({ where: { name: NEWCOMER } }),
+      1,
+      "Re-adding an existing person should reuse their user row",
+    );
+    console.log("✓ Membership changes never duplicate a person.");
 
     console.log(`\nAll smoke assertions passed. Final: Ali is owed ${formatMinor(m3.get("Ali") ?? 0)}.\n`);
   } finally {
