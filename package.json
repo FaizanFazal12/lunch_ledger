@@ -7,10 +7,10 @@
     "node": ">=20"
   },
   "scripts": {
-    "build": "pnpm -r build",
+    "build": "node api.js && pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
-    "dev:api": "pnpm --filter @lunchledger/api dev",
+    "dev:api": "node api.js && pnpm --filter @lunchledger/api dev",
     "chat": "pnpm --filter @lunchledger/api chat",
     "db:generate": "pnpm --filter @lunchledger/db generate",
     "db:migrate": "pnpm --filter @lunchledger/db migrate",
@@ -21,6 +21,8 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "dotenv": "^8.2.0",
+    "node-fetch": "^3.3.2",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   },
