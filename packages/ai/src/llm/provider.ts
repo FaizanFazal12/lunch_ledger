@@ -13,7 +13,10 @@ export interface ProviderModel {
 
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 const DEFAULT_OPENROUTER_MODEL = "openai/gpt-oss-20b:free";
-const DEFAULT_GEMINI_MODEL = "gemini-2.0-flash";
+// Google retires older Gemini models for new API keys (the 2.x flash family is
+// already gone), so this default is a currently-available pinned model rather than
+// a moving alias. `gemini-flash-latest` tracks the newest one if you prefer that.
+const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
 
 function nonEmpty(value: string | undefined): value is string {
   return value !== undefined && value.length > 0;
